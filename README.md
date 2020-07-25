@@ -1,4 +1,4 @@
-# Se``ntinel-NLP-Role-Tasks
+# Sentinel-NLP-Role-Tasks
 This repository contains sources codes that are asked for a NLP role at Sentinel. 
 
 The codes are compiled with python3.7. Virtualenv is utilized. 
