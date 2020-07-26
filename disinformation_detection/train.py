@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import argparse
 from .linear_models import MODELS
+from utils import str2bool
 
 SEP = '<-SEP->'
 
@@ -29,7 +30,7 @@ def bert_train(random_seed: int):
     X_test = np.asarray(X_test)
 
     train_dataset, dev_dataset, test_dataset = get_torch_datasets(X_train, y_train, X_dev, y_dev, X_test,
-                                                                             y_test)
+                                                                  y_test)
     device = 'cuda' if args.use_gpu and torch.cuda.is_available else 'cpu'
     model_params = {
         'lr': args.lr,
@@ -40,7 +41,7 @@ def bert_train(random_seed: int):
                       random_seed=random_seed, device=device, model_params=model_params)
 
 
-def train_nela(random_seed: int, model: str, features: list):
+def feats_train(random_seed: int, model: str, features: list):
     '''
 
     :param random_seed: seed value for reproducibility
@@ -52,9 +53,12 @@ def train_nela(random_seed: int, model: str, features: list):
 
     if len(features) == 1:
         _feature = FEATURES[features[0]]
-        X_train = np.asarray([_feature(text) for text in full_train_texts])
-        X_dev = np.asarray([_feature(text) for text in full_dev_texts])
-        X_test = np.asarray([_feature(text) for text in full_test_texts])
+        if _feature.__name__ == 'ngram':
+            X_train, X_dev, X_test = ngram(full_train_texts, full_dev_texts, full_test_texts)
+        else:
+            X_train = np.asarray([_feature(text) for text in full_train_texts])
+            X_dev = np.asarray([_feature(text) for text in full_dev_texts])
+            X_test = np.asarray([_feature(text) for text in full_test_texts])
 
     else:
         X_train = np.array([], dtype=np.float).reshape(len(full_train_titles), 0)
@@ -62,12 +66,18 @@ def train_nela(random_seed: int, model: str, features: list):
         X_test = np.array([], dtype=np.float).reshape(len(full_test_titles), 0)
 
         for feature in features:
-            X_train = np.concatenate((X_train, np.asarray([FEATURES[feature](text) for text in full_train_texts])),
-                                     axis=1)
-            X_dev = np.concatenate((X_dev, np.asarray([FEATURES[feature](text) for text in full_dev_texts])),
-                                   axis=1)
-            X_test = np.concatenate((X_test, np.asarray([FEATURES[feature](text) for text in full_test_texts])),
-                                    axis=1)
+            if feature == 'ngram':
+                _X_train, _X_dev, _X_test = ngram(full_train_texts, full_dev_texts, full_test_texts)
+                X_train = np.concatenate((X_train, _X_train),axis=1)
+                X_dev = np.concatenate((X_dev, _X_dev), axis=1)
+                X_test = np.concatenate((X_test, _X_test), axis=1)
+            else:
+                X_train = np.concatenate((X_train, np.asarray([FEATURES[feature](text) for text in full_train_texts])),
+                                         axis=1)
+                X_dev = np.concatenate((X_dev, np.asarray([FEATURES[feature](text) for text in full_dev_texts])),
+                                       axis=1)
+                X_test = np.concatenate((X_test, np.asarray([FEATURES[feature](text) for text in full_test_texts])),
+                                        axis=1)
 
     assert len(X_train) == len(y_train)
     assert len(X_dev) == len(y_dev)
@@ -76,21 +86,6 @@ def train_nela(random_seed: int, model: str, features: list):
     MODELS[model](X_train=X_train, y_train=y_train, X_dev=X_dev, y_dev=y_dev, X_test=X_test, y_test=y_test,
                   random_state=random_seed,
                   feat_name=feat_name)
-
-
-def train_ngram(random_seed: int, model: str):
-    '''
-
-    :param random_seed: seed value for reproducibility
-    :param model: the name of model choice e.g svm, naive, BERT
-    :param features: features that are used as an input
-    :return:
-    '''
-    full_dev_texts, full_dev_titles, full_test_texts, full_test_titles, full_train_texts, full_train_titles, y_dev, y_test, y_train = read_data()
-    X_train, X_dev, X_test = ngram(full_train_texts, full_dev_texts, full_test_texts)
-    MODELS[model](X_train=X_train, y_train=y_train, X_dev=X_dev, y_dev=y_dev, X_test=X_test, y_test=y_test,
-                  random_state=random_seed, feat_name='ngrams')
-
 
 def read_data():
     train = get_task1_data(mode='train')
@@ -136,17 +131,6 @@ def read_data():
     return full_dev_texts, full_dev_titles, full_test_texts, full_test_titles, full_train_texts, full_train_titles, y_dev, y_test, y_train
 
 
-def str2bool(v):
-    if isinstance(v, bool):
-        return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
@@ -165,7 +149,4 @@ if __name__ == '__main__':
     if args.model == 'bert':
         bert_train(random_seed=args.random_seed)
     else:
-        if 'ngram' == args.features[0]:
-            train_ngram(random_seed=args.random_seed, model=args.model)
-        else:
-            train_nela(random_seed=args.random_seed, model=args.model, features=args.features)
+        feats_train(random_seed=args.random_seed, model=args.model, features=args.features)

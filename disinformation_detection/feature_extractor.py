@@ -1,9 +1,8 @@
 import nltk
-import re
 import numpy as np
 from nela_features.nela_features import NELAFeatureExtractor
 from sklearn.feature_extraction.text import TfidfVectorizer
-from utils import CACHE
+from utils import CACHE, preprocess
 
 nltk.download('maxent_ne_chunker')
 nltk.download('words')
@@ -52,25 +51,14 @@ def cos_similarity(title: str, text: str):
     return cos_sim
 
 
-def preprocess(text: str):
-    text = text.lower()
-    text = re.sub(r"http\S+", "", text, flags=re.MULTILINE)
-    text = re.sub('\w*\d\w*', '', text)
-    text = re.sub('\[.*?\]', '', text)
-    text = re.sub('\(.*?\)', '', text)
-    text = re.sub(r"[\n\t\s]+", " ", text)
-    text = text.strip()
-    return text
-
-
-def ngram(texts_train: list, texts_dev:list, texts_test:list):
+def ngram(texts_train: list, texts_dev: list, texts_test: list):
     texts_train = np.array([preprocess(text) for text in texts_train])
     texts_dev = np.array([preprocess(text) for text in texts_dev])
     texts_test = np.array([preprocess(text) for text in texts_test])
-    vectorizer = TfidfVectorizer(ngram_range=(1, 2))
-    X_train = vectorizer.fit_transform(texts_train)
-    X_dev = vectorizer.transform(texts_dev)
-    X_test = vectorizer.transform(texts_test)
+    vectorizer = TfidfVectorizer(ngram_range=(1, 2), stop_words='english')
+    X_train = vectorizer.fit_transform(texts_train).toarray()
+    X_dev = vectorizer.transform(texts_dev).toarray()
+    X_test = vectorizer.transform(texts_test).toarray()
     return X_train, X_dev, X_test
 
 
@@ -82,4 +70,5 @@ FEATURES = {
     'moral_feat': moral_feat,
     # 'event_feat': event_feat,
     'cos_similarity': cos_similarity,
+    'ngram': ngram
 }
