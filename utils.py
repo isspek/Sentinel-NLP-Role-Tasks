@@ -1,11 +1,14 @@
 import logging
 import tldextract
+import string
 import json
 import pickle
 import random
+import re
 from sklearn.metrics import classification_report
 from sklearn.metrics import roc_auc_score
 from diskcache import Cache
+import argparse
 from pathlib import Path
 
 CACHE = Cache(Path('tmp'))
@@ -100,3 +103,23 @@ def report_results(y_dev, y_pred, y_pred_test, y_test):
     logger.info(classification_report(y_true=y_test, y_pred=y_pred_test))
     logger.info('ROC-AUC Score')
     logger.info(roc_auc_score(y_true=y_test, y_score=y_pred_test))
+
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+def preprocess(text: str):
+    text = text.lower()
+    text = re.sub(r"http\S+", "", text, flags=re.MULTILINE)
+    text = re.sub('\w*\d\w*', '', text)
+    text = re.sub('\[.*?\]', '', text)
+    text = re.sub('\(.*?\)', '', text)
+    text = re.sub(r"[\n\t\s]+", " ", text)
+    text = text.strip()
+    return text
