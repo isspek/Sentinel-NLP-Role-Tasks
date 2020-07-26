@@ -16,9 +16,10 @@ To initialize virtual environment, run the following code:
 ## Task 1
 Train set is split by sources. I ensure that train an dev set has different sources. However, split function gives each time different sets even random seed is set. Therefore I saved splits under `/data`. 
 
-BERT is trained with GPU.
-
 ## Task 2
+Download GoogleNews embeddings. You can find a script for this under `/clustering`.
+
+Download Spacy's language model `python -m spacy download en_core_web_sm`
 
 ## Examples
 Folder `/scripts` contains bash commands for each task.
