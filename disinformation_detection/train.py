@@ -14,20 +14,24 @@ SEP = '<-SEP->'
 def bert_train(random_seed: int):
     full_dev_texts, full_dev_titles, full_test_texts, full_test_titles, full_train_texts, full_train_titles, y_dev, y_test, y_train = read_data()
 
-    X_train = []
-    for i in range(len(full_train_titles)):
-        X_train.append(full_train_titles[i] + SEP + full_train_texts[i])
-    X_train = np.asarray(X_train)
+    # X_train = []
+    # for i in range(len(full_train_titles)):
+    #     X_train.append(full_train_titles[i] + SEP + full_train_texts[i])
+    # X_train = np.asarray(X_train)
+    #
+    # X_dev = []
+    # for i in range(len(full_dev_titles)):
+    #     X_dev.append(full_dev_titles[i] + SEP + full_dev_texts[i])
+    # X_dev = np.asarray(X_dev)
+    #
+    # X_test = []
+    # for i in range(len(full_test_titles)):
+    #     X_test.append(full_test_titles[i] + SEP + full_test_texts[i])
+    # X_test = np.asarray(X_test)
 
-    X_dev = []
-    for i in range(len(full_dev_titles)):
-        X_dev.append(full_dev_titles[i] + SEP + full_dev_texts[i])
-    X_dev = np.asarray(X_dev)
-
-    X_test = []
-    for i in range(len(full_test_titles)):
-        X_test.append(full_test_titles[i] + SEP + full_test_texts[i])
-    X_test = np.asarray(X_test)
+    X_train = full_train_texts
+    X_dev = full_dev_texts
+    X_test = full_test_texts
 
     train_dataset, dev_dataset, test_dataset = get_torch_datasets(X_train, y_train, X_dev, y_dev, X_test,
                                                                   y_test)

@@ -14,9 +14,9 @@ def bert_encoder(articles, tokenizer):
     ids = []
     att_masks = []
     for article in articles:
-        encoded_article = tokenizer.encode_plus(article, add_special_tokens=True, max_length=250,
+        encoded_article = tokenizer.encode_plus(article, add_special_tokens=True, truncation=True,
                                                 pad_to_max_length=True,
-                                                return_attention_mask=True, return_tensors='pt')
+                                                return_attention_mask=True, return_tensors='pt', max_length=128)
         ids.append(encoded_article['input_ids'])
         att_masks.append(encoded_article['attention_mask'])
 
@@ -26,7 +26,7 @@ def bert_encoder(articles, tokenizer):
 
 
 def get_torch_datasets(X_train, y_train, X_dev, y_dev, X_test, y_test):
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     train_ids, train_att_masks = bert_encoder(X_train, tokenizer)
     dev_ids, dev_att_masks = bert_encoder(X_dev, tokenizer)
     test_ids, test_att_masks = bert_encoder(X_test, tokenizer)
